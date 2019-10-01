@@ -15,7 +15,9 @@ class Game {
         let keyboard = new Controller(player)
         this.bodies = [];
         this.bodies.push(player);
-        this.bodies.push(cookie)
+        this.bodies.push(cookie);
+
+        this.cookie_collision = new Collision(cookie, player);
 
         this.update(keyboard.response);
 
@@ -31,6 +33,14 @@ class Game {
         this.bodies.forEach(function(body){
             body.update(canvas, keyboard_event);
         });
+        if (this.cookie_collision.isCollision()) {
+            // TODO: reposition method
+            if (this.bodies[1].position.x === 200){
+                this.bodies[1].position = {x: 20, y: 20}
+            } else{
+                this.bodies[1].position = {x: 200, y: 300}
+            }
+        }
     }
     establish_background(){
         this.canvas.fillStyle = "lightblue";
@@ -54,6 +64,7 @@ class Entity {
         this.place(canvas)
     }
 }
+
 class Cookie extends Entity {
     constructor(position){
         super(position, 20, "Gold")
@@ -110,6 +121,45 @@ class Player extends Entity {
     }
 }
 Player.MOVES = {LEFT: "Left", RIGHT: "Right", UP: "Up", DOWN: "Down", STAY: "Stay"}
+
+class Collision {
+    constructor(e1, e2) {
+        // e1 and e2 are both Entities.
+        this.e1 = e1;
+        this.e2 = e2;
+    }
+
+    coordIsInBox(coord, box){
+        let right_x = box.left_x + box.size;
+        let bottom_y = box.upper_y + box.size;
+        // console.log("box x" + box.left_x)
+        // console.log("box y" + box.upper_y)
+        // console.log("coord x" + coord.x)
+        // console.log("coord y" + coord.y)
+
+        if (box.left_x <= coord.x && coord.x <= right_x &&
+            box.upper_y <= coord.y && coord.y <= bottom_y){
+            return true
+        }
+    }
+
+    isCollision() {
+        // Only works if e1 is a bigger square
+        // ie. doesn't account if e1 is completely engulfing e2
+        let upper_left = {x: this.e1.position.x, y: this.e1.position.y};
+        let upper_right = {x: this.e1.position.x + this.e1.size, y: this.e1.position.y};
+        let bottom_left = {x: this.e1.position.x, y: this.e1.position.y + this.e1.size};
+        let bottom_right = {x: this.e1.position.x + this.e1.size, y: this.e1.position.y + this.e1.size};
+        let e2_box = {left_x: this.e2.position.x, upper_y: this.e2.position.y, size: this.e2.size};
+
+        return (this.coordIsInBox(upper_left, e2_box) ||
+                this.coordIsInBox(upper_right, e2_box) ||
+                this.coordIsInBox(bottom_left, e2_box) ||
+                this.coordIsInBox(bottom_right, e2_box)
+            )
+    }
+
+}
 
 class Controller {
     constructor(player){
