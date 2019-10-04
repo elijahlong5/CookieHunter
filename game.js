@@ -1,3 +1,4 @@
+
 let canvas = document.getElementById("canvas");
 canvas = canvas.getContext("2d");
 
@@ -5,14 +6,21 @@ max_height = 400;
 max_width = 400;
 
 class Game {
+    SIZE_INCREMENT = 60;
+    ORIGINAL_SIZE = 50;
+    COOKIE_GOAL_INCREMENT = 200;
 
     constructor(canvas) {
         this.canvas = canvas;
         this.establish_background();
+        this.cookies_eaten = 0;
+        this.cookie_goal = 200;
+        this.original_position = {x: 175, y: 175};
 
-        let player = new Player({x: 175, y: 175}, 50);
-        let cookie = new Cookie({x: 40, y: 40})
-        let keyboard = new Controller(player)
+
+        let player = new Player(this.original_position, this.ORIGINAL_SIZE);
+        let cookie = new Cookie({x: 40, y: 40});
+        let keyboard = new Controller(player);
         this.bodies = [];
         this.bodies.push(player);
         this.bodies.push(cookie);
@@ -35,10 +43,23 @@ class Game {
         });
         if (this.cookie_collision.isCollision()) {
             // TODO: reposition method
-            if (this.bodies[1].position.x === 200){
-                this.bodies[1].position = {x: 20, y: 20}
-            } else{
-                this.bodies[1].position = {x: 200, y: 300}
+            function getRandomInt(max) {
+                return Math.floor(Math.random() * Math.floor(max));
+            }
+            let new_x = getRandomInt(window.max_width - this.bodies[1].size);
+            let new_y = getRandomInt(window.max_height - this.bodies[1].size);
+            this.bodies[1].position = {x: new_x, y: new_y};
+            this.bodies[0].size += this.SIZE_INCREMENT;
+            this.cookies_eaten += 1;
+            document.getElementById('cookie-counter').innerText = "Cookies eaten: "+ this.cookies_eaten;
+
+            // if (this.bodies[0].size >= window.max_height){
+            if (this.cookies_eaten >= this.cookie_goal){
+                this.bodies[0].size = this.ORIGINAL_SIZE;
+                this.bodies[0].position = this.original_position;
+                this.bodies[0].place(this.canvas);
+                this.cookie_goal += this.COOKIE_GOAL_INCREMENT;
+                alert('you win!')
             }
         }
     }
@@ -98,14 +119,14 @@ class Player extends Entity {
         }
         else if (direction === "Right"){
             if (this.position.x + this.size >= window.max_width){
-                this.position.x = window.max_width - this.size
+                this.position.x = window.max_width - this.size;
             } else {
                 this.position.x += this.speed;
             }
         }
         else if (direction === "Up"){
             if (this.position.y <= 0){
-                this.position.y = 0
+                this.position.y = 0;
             } else {
                 this.position.y -= this.speed;
 
